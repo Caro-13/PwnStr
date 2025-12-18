@@ -4,25 +4,28 @@ boardLength = 8
 
 def checkMoves(pos, board, color):
     possibleMoves = []
-    p = board[pos][0]
-    c = board[pos][1]
-    for x in range(board.shape[0] - 1):
-        for y in range(board.shape[1]):
-            if c == color:
-                match p:
-                    case "p":
-                        possibleMoves.extend(checkPawn(pos, board, color))
-                    case "n":
-                        possibleMoves.extend(checkL(pos, board, color))
-                    case "b":
-                        possibleMoves.extend(checkDiagonal(pos, board, color))
-                    case "r":
-                        possibleMoves.extend(checkHorizVerti(pos, board, color))
-                    case "q":
-                        possibleMoves.extend(checkHorizVerti(pos, board, color))
-                        possibleMoves.extend(checkDiagonal(pos, board, color))
-                    case "k":
-                        possibleMoves.extend(checkCarre(pos, board, color))
+    if board[pos] != "":
+        p = board[pos][0]
+        c = board[pos][1]
+        for x in range(board.shape[0] - 1):
+            for y in range(board.shape[1]):
+                if c == color:
+                    match p:
+                        # case "p":
+                        #     possibleMoves.extend(checkPawn(pos, board, color))
+                        # case "n":
+                        #     possibleMoves.extend(checkL(pos, board, color))
+                        # case "b":
+                        #     possibleMoves.extend(checkDiagonal(pos, board, color))
+                        case "r":
+                            possibleMoves.extend(checkHorizVerti(pos, board, color))
+                        # case "q":
+                        #     possibleMoves.extend(checkHorizVerti(pos, board, color))
+                        #     possibleMoves.extend(checkDiagonal(pos, board, color))
+                        # case "k":
+                        #     possibleMoves.extend(checkCarre(pos, board, color))
+                        case _:
+                            continue
     return possibleMoves
 
 
