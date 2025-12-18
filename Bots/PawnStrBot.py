@@ -16,12 +16,11 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     color = player_sequence[1]
     for x in range(board.shape[0]-1):
         for y in range(board.shape[1]):
-            if board[x,y] != "":
-                if board[x,y][-1] != color:
+            if board[x][y] != "":
+                if board[x][y][-1] != color:
                     continue
-                #print(board[x,y].string(), (x,y))
                 pos = (x, y)
-                print(board[x,y].string(), (x,y),checkMoves(pos, board, color))
+                print(board[x][y][0] + board[x][y][1], (x,y),checkMoves(pos, board, color))
 
         print("\n")
 
