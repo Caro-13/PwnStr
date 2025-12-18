@@ -5,30 +5,25 @@ endBoard = boardLength-1
 
 def checkMoves(pos, board, color):
     possibleMoves = []
-    if board[pos] != "":
-        p = board[pos][0]
-        c = board[pos][1]
-        for x in range(board.shape[0] - 1):
-            for y in range(board.shape[1]):
-                if c == color:
-                    match p:
-                        case "p":
-                            possibleMoves.extend(checkPawn(pos, board, color))
-                        case "n":
-                            possibleMoves.extend(checkL(pos, board, color))
-                        case "b":
-                            possibleMoves.extend(checkDiagonal(pos, board, color))
-                        #case "r":
-                        #    possibleMoves.extend(checkHorizVerti(pos, board, color))
-                        # case "q":
-                        #     possibleMoves.extend(checkHorizVerti(pos, board, color))
-                        #     possibleMoves.extend(checkDiagonal(pos, board, color))
-                        # case "k":
-                        #     possibleMoves.extend(checkCarre(pos, board, color))
-                        case _:
-                            continue
-        return possibleMoves
-    return "nope"
+    p = board[pos[0], pos[1]][0]
+    c = board[pos[0],pos[1]][-1]
+    match p:
+        case "p":
+            possibleMoves.extend(checkPawn(pos, board, color))
+        case "n":
+            possibleMoves.extend(checkL(pos, board, color))
+        case "b":
+            possibleMoves.extend(checkDiagonal(pos, board, color))
+        #case "r":
+        #    possibleMoves.extend(checkHorizVerti(pos, board, color))
+        # case "q":
+        #     possibleMoves.extend(checkHorizVerti(pos, board, color))
+        #     possibleMoves.extend(checkDiagonal(pos, board, color))
+        # case "k":
+        #     possibleMoves.extend(checkCarre(pos, board, color))
+        case _:
+            return
+    return possibleMoves
 
 
 def checkValue(p):
@@ -80,13 +75,13 @@ def checkDiagonal(pos, board, color):
             nextPos = (x + i * vert, y + i * horiz)
             #empty case
             if board[nextPos[0], nextPos[1]] == '':
-                possibleMoves.append((pos, nextPos, checkValue(p)))
+                possibleMoves.append((pos, nextPos, 0))
             #opponent piece
             elif board[nextPos[0], nextPos[1]][-1] != color:
-                possibleMoves.append((pos, nextPos, checkValue(p)))
+                possibleMoves.append((pos, nextPos, checkValue(p[0])))
                 break
             #my piece
-            if board[nextPos][-1] == color:
+            elif board[nextPos][-1] == color:
                 break
 
     goDiagonal(-1, 1, rightUp)
@@ -150,7 +145,7 @@ def checkL(pos, board, color):
                 possibleMoves.append((pos, (nextX,nextY), checkValue(p[0])))
 
             # my piece
-            if board[nextX,][-1] == color:
+            elif board[nextX,][-1] == color:
                 pass
 
     goL(x+2,y+1)
@@ -176,15 +171,17 @@ def checkPawn(pos, board, color):
     p = board[x][y][0]
     possibleMoves = []
 
-    if (isNextPosOnBoard(x, y+1)):
+    nextX,nextY = x+1,y
+
+    if isNextPosOnBoard(nextX, nextY):
         #empty case
-        if board[x][y+1] == "":
-            possibleMoves.append((pos, (x,y+1), checkValue(p)))
+        if board[nextX][nextY] == '':
+            possibleMoves.append((pos, (nextX,nextY), 0))
         #opponent piece
-        if board[x][y+1][-1] != color:
-            possibleMoves.append((pos, (x,y+1), checkValue(p)))
+        elif board[nextX][nextY][-1] != color:
+            possibleMoves.append((pos, (nextX,nextY), checkValue(p[0])))
         # my piece
-        if board[x][y + 1][-1] == color:
+        elif board[nextX][nextY][-1] == color:
             pass
 
     return possibleMoves
