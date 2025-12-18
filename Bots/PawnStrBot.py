@@ -1,4 +1,5 @@
 import random
+import time
 
 from .PwnStr import *
 
@@ -14,6 +15,8 @@ from Bots.ChessBotList import register_chess_bot
 
 #  our bot
 def chess_bot(player_sequence, board, time_budget, **kwargs):
+    start = time.perf_counter()
+
     color = player_sequence[1]
 
     allPossibleMoves = []
@@ -35,6 +38,12 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
             bestMove = allPossibleMoves[i]
     while bestMove == ((0,0),(0,0),0):
         bestMove = allPossibleMoves[random.randint(0,len(allPossibleMoves)-1)]
+
+    # Compute and display execution time
+    end = time.perf_counter()
+    execution_time = round(end - start, 5)
+    print(f"Execution time: {execution_time}s")
+
     #return (0,0), (0,0) #de base
     return bestMove[0],bestMove[1]
 
