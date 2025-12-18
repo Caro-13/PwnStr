@@ -54,6 +54,12 @@ def printBoard(board):
         piece = ""
     print("\n")
 
+def newBoard(board, move):
+    outBoard = [row.copy() for row in board]
+    outBoard[move[1][0]][move[1][1]] = outBoard[move[0][0]][move[0][1]]
+    outBoard[move[0][0]][move[0][1]] = ""
+    return outBoard
+
 def checkDiagonal(pos, board, color):
     x = pos[0]
     y = pos[1]
