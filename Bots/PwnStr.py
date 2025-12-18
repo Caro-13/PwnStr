@@ -1,5 +1,6 @@
 # CONST
 boardLength = 8
+endBoard = boardLength-1
 
 
 def checkMoves(pos, board, color):
@@ -61,32 +62,33 @@ def printBoard(board):
 def checkDiagonal(pos, board, color):
     x = pos[0]
     y = pos[1]
-    p = board(pos)[0]
+    p = board[x,y][0]
     possibleMoves = []
 
-    rightBottum = y if y < x else x
-    rightUp = y if y < boardLength - x else boardLength - x
+    rightBottom = min(x,y)
+    rightUp = min(endBoard-x,y)
 
-    leftBottum = boardLength - y if boardLength - y < x else x
-    leftUp = boardLength - y if boardLength - y < boardLength - x else boardLength - x
+    leftBottom = min (x, endBoard - y)
+    leftUp = min(endBoard - x,endBoard - y)
 
-    def goDiagonal(horiz, vert, borne, step):
-        for i in range(x, borne, step):
+    def goDiagonal(horiz, vert, max_steps):
+        for i in range(1, max_steps + 1):
             nextPos = (x + i * vert, y + i * horiz)
-            if nextPos == "":
+            #empty case
+            if board[nextPos[0], nextPos[1]] == '':
                 possibleMoves.append((pos, nextPos, checkValue(p)))
-
-            if board[nextPos][-1] != color:
+            #opponent piece
+            elif board[nextPos[0], nextPos[1]][-1] != color:
                 possibleMoves.append((pos, nextPos, checkValue(p)))
                 break
-
+            #my piece
             if board[nextPos][-1] == color:
                 break
 
-    goDiagonal(-1, 1, rightUp, 1)
-    goDiagonal(-1, -1, rightBottum, -1)
-    goDiagonal(1, 1, leftUp, 1)
-    goDiagonal(1, -1, leftBottum, -1)
+    goDiagonal(-1, 1, rightUp)
+    goDiagonal(-1, -1, rightBottom)
+    goDiagonal(1, 1, leftUp)
+    goDiagonal(1, -1, leftBottom)
 
     print(possibleMoves)
     return possibleMoves
@@ -99,7 +101,32 @@ def checkHorizVerti(pos, board, color):
 
 # Caro
 def checkL(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    p = board[x,y][0]
     possibleMoves = []
+
+    def goL(nextX,nextY):
+        # empty case
+        if board[nextX, nextY] == '':
+            possibleMoves.append((pos, (nextX,nextY), checkValue(p)))
+        # opponent piece
+        elif board[nextX,nextY][-1] != color:
+            possibleMoves.append((pos, (nextX,nextY), checkValue(p)))
+
+        # my piece
+        if board[nextX,][-1] == color:
+            pass
+
+    goL(x+2,y+1)
+    goL(x+2,y-1)
+    goL(x-2,y+1)
+    goL(x-2,y-1)
+    goL(x+1,y+2)
+    goL(x-1,y+2)
+    goL(x+1,y-2)
+    goL(x-1,y-2)
+
     return possibleMoves
 
 # Raphael
