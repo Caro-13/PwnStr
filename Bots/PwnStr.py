@@ -12,14 +12,14 @@ def checkMoves(pos, board, color):
             for y in range(board.shape[1]):
                 if c == color:
                     match p:
-                        # case "p":
-                        #     possibleMoves.extend(checkPawn(pos, board, color))
-                        # case "n":
-                        #     possibleMoves.extend(checkL(pos, board, color))
-                        # case "b":
-                        #     possibleMoves.extend(checkDiagonal(pos, board, color))
-                        case "r":
-                            possibleMoves.extend(checkHorizVerti(pos, board, color))
+                        case "p":
+                            possibleMoves.extend(checkPawn(pos, board, color))
+                        case "n":
+                            possibleMoves.extend(checkL(pos, board, color))
+                        case "b":
+                            possibleMoves.extend(checkDiagonal(pos, board, color))
+                        #case "r":
+                        #    possibleMoves.extend(checkHorizVerti(pos, board, color))
                         # case "q":
                         #     possibleMoves.extend(checkHorizVerti(pos, board, color))
                         #     possibleMoves.extend(checkDiagonal(pos, board, color))
@@ -27,7 +27,8 @@ def checkMoves(pos, board, color):
                         #     possibleMoves.extend(checkCarre(pos, board, color))
                         case _:
                             continue
-    return possibleMoves
+        return possibleMoves
+    return "nope"
 
 
 def checkValue(p):
@@ -65,7 +66,7 @@ def printBoard(board):
 def checkDiagonal(pos, board, color):
     x = pos[0]
     y = pos[1]
-    p = board[x,y][0]
+    p = board[x][y][0]
     possibleMoves = []
 
     rightBottom = min(x,y)
@@ -93,7 +94,6 @@ def checkDiagonal(pos, board, color):
     goDiagonal(1, 1, leftUp)
     goDiagonal(1, -1, leftBottom)
 
-    print(possibleMoves)
     return possibleMoves
 
 
@@ -125,10 +125,10 @@ def checkHorizVerti(pos, board, color):
     endX = board.shape[0]
     endY = board.shape[1]
 
-    possibleMoves.extend(goLine(1, 0, endY, 1, pos, board, color, 0, y))    # Check the line incrementing y
-    possibleMoves.extend(goLine(-1, 0, 0, -1, pos, board, color, 0, y))          # Check the line decrementing y
-    possibleMoves.extend(goLine(0, 1, endX, 1, pos, board, color, x, 0))    # Check the line incrementing x
-    possibleMoves.extend(goLine(0, -1, 0, -1, pos, board, color, x, 0))         # Check the line decrementing x
+    possibleMoves.append(goLine(1, 0, endY, 1, pos, board, color, 0, y))    # Check the line incrementing y
+    possibleMoves.append(goLine(-1, 0, 0, -1, pos, board, color, 0, y))          # Check the line decrementing y
+    possibleMoves.append(goLine(0, 1, endX, 1, pos, board, color, x, 0))    # Check the line incrementing x
+    possibleMoves.append(goLine(0, -1, 0, -1, pos, board, color, x, 0))         # Check the line decrementing x
 
     return possibleMoves
 
@@ -137,20 +137,21 @@ def checkHorizVerti(pos, board, color):
 def checkL(pos, board, color):
     x = pos[0]
     y = pos[1]
-    p = board[x,y][0]
+    p = board[x][y][0]
     possibleMoves = []
 
     def goL(nextX,nextY):
-        # empty case
-        if board[nextX, nextY] == '':
-            possibleMoves.append((pos, (nextX,nextY), checkValue(p)))
-        # opponent piece
-        elif board[nextX,nextY][-1] != color:
-            possibleMoves.append((pos, (nextX,nextY), checkValue(p)))
+        if (isNextPosOnBoard(nextX,nextY)):
+            # empty case
+            if board[nextX, nextY] == '':
+                possibleMoves.append((pos, (nextX,nextY), 0))
+            # opponent piece
+            elif board[nextX,nextY][-1] != color:
+                possibleMoves.append((pos, (nextX,nextY), checkValue(p[0])))
 
-        # my piece
-        if board[nextX,][-1] == color:
-            pass
+            # my piece
+            if board[nextX,][-1] == color:
+                pass
 
     goL(x+2,y+1)
     goL(x+2,y-1)
@@ -170,5 +171,25 @@ def checkCarre(pos, board, color):
 
 # Caro
 def checkPawn(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    p = board[x][y][0]
     possibleMoves = []
+
+    if (isNextPosOnBoard(x, y+1)):
+        #empty case
+        if board[x][y+1] == "":
+            possibleMoves.append((pos, (x,y+1), checkValue(p)))
+        #opponent piece
+        if board[x][y+1][-1] != color:
+            possibleMoves.append((pos, (x,y+1), checkValue(p)))
+        # my piece
+        if board[x][y + 1][-1] == color:
+            pass
+
     return possibleMoves
+
+def isNextPosOnBoard(nextX,nextY):
+    if nextX < 0 or nextY < 0 or nextX > endBoard or nextY > endBoard:
+        return False
+    return True

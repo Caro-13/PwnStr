@@ -1,4 +1,4 @@
-from PwnStr import *
+from .PwnStr import *
 
 #   Example function to be implemented for
 #       Single important function is next_best
@@ -10,17 +10,18 @@ from PwnStr import *
 #   Be careful with modules to import from the root (don't forget the Bots.)
 from Bots.ChessBotList import register_chess_bot
 
-#   Simply move the pawns forward and tries to capture as soon as possible
+#  our bot
 def chess_bot(player_sequence, board, time_budget, **kwargs):
 
     color = player_sequence[1]
     for x in range(board.shape[0]-1):
         for y in range(board.shape[1]):
-            if board[x,y][-1] != color:
-                continue
-            print(board[x,y].string(), (x,y))
-            pos = (x, y)
-            checkDiagonal(pos, board, color)
+            if board[x,y] != "":
+                if board[x,y][-1] != color:
+                    continue
+                #print(board[x,y].string(), (x,y))
+                pos = (x, y)
+                print(board[x,y].string(), (x,y),checkMoves(pos, board, color))
 
         print("\n")
 
