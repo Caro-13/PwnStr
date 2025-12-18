@@ -2,7 +2,6 @@
 boardLength = 8
 endBoard = boardLength-1
 
-
 def checkMoves(pos, board, color):
     possibleMoves = []
     p = board[pos[0], pos[1]][0]
@@ -14,17 +13,16 @@ def checkMoves(pos, board, color):
             possibleMoves.extend(checkL(pos, board, color))
         case "b":
             possibleMoves.extend(checkDiagonal(pos, board, color))
-        #case "r":
-        #    possibleMoves.extend(checkHorizVerti(pos, board, color))
-        # case "q":
-        #     possibleMoves.extend(checkHorizVerti(pos, board, color))
-        #     possibleMoves.extend(checkDiagonal(pos, board, color))
-        # case "k":
-        #     possibleMoves.extend(checkCarre(pos, board, color))
+        case "r":
+           possibleMoves.extend(checkHorizVerti(pos, board, color))
+        case "q":
+            possibleMoves.extend(checkHorizVerti(pos, board, color))
+            possibleMoves.extend(checkDiagonal(pos, board, color))
+        case "k":
+            possibleMoves.extend(checkCarre(pos, board, color))
         case _:
             return [((0,0),(0,0),0)]
     return possibleMoves
-
 
 def checkValue(p):
     match p:
@@ -43,7 +41,6 @@ def checkValue(p):
         case _:
             return 0
 
-
 def printBoard(board):
     piece = ""
     print("\n")
@@ -57,7 +54,6 @@ def printBoard(board):
         piece = ""
     print("\n")
 
-# Caro
 def checkDiagonal(pos, board, color):
     x = pos[0]
     y = pos[1]
@@ -91,44 +87,40 @@ def checkDiagonal(pos, board, color):
 
     return possibleMoves
 
-
-def goLine(horiz, vert, borne, step, pos, board, color, x=0, y=0):
-    p = board(pos)[0]
+def goLine(horiz, vert, max_steps, pos, board, color):
+    x = pos[0]
+    y = pos[1]
     possibleMoves = []
 
-    a = x if x else y if y else 0
-    for i in range(a, borne, step):
-        nextPos = (x + (i * vert), y + (i * horiz))
-        if board[nextPos] == "":
-            possibleMoves.append((pos, nextPos, checkValue(p)))
-
-        if board[nextPos][-1] != color:
-            possibleMoves.append((pos, nextPos, checkValue(p)))
+    for i in range(1, max_steps):
+        nextPos = (x + i * vert, y + i * horiz)
+        # empty case
+        if board[nextPos[0]][nextPos[1]] == '':
+            possibleMoves.append((pos, nextPos, 0))
+        # opponent piece
+        elif board[nextPos[0]][nextPos[1]][-1] != color:
+            nextP = board[nextPos[0]][nextPos[1]][0]
+            possibleMoves.append((pos, nextPos, checkValue(nextP)))
             break
-
-        if board[nextPos][-1] == color:
+        # my piece
+        elif board[nextPos[0]][nextPos[1]][-1] == color:
             break
     return possibleMoves
 
-
-# Raphael
 def checkHorizVerti(pos, board, color):
     x = pos[0]
     y = pos[1]
-    p = board(pos)[0]
     possibleMoves = []
     endX = board.shape[0]
     endY = board.shape[1]
 
-    possibleMoves.append(goLine(1, 0, endY, 1, pos, board, color, 0, y))    # Check the line incrementing y
-    possibleMoves.append(goLine(-1, 0, 0, -1, pos, board, color, 0, y))          # Check the line decrementing y
-    possibleMoves.append(goLine(0, 1, endX, 1, pos, board, color, x, 0))    # Check the line incrementing x
-    possibleMoves.append(goLine(0, -1, 0, -1, pos, board, color, x, 0))         # Check the line decrementing x
+    possibleMoves.extend(goLine(1, 0, endY - y, pos, board, color))  # Check the line incrementing y
+    possibleMoves.extend(goLine(-1, 0, y, pos, board, color))  # Check the line decrementing y
+    possibleMoves.extend(goLine(0, 1, endX - x, pos, board, color))  # Check the line incrementing x
+    possibleMoves.extend(goLine(0, -1, x, pos, board, color))  # Check the line decrementing x
 
     return possibleMoves
 
-
-# Caro
 def checkL(pos, board, color):
     x = pos[0]
     y = pos[1]
@@ -159,12 +151,24 @@ def checkL(pos, board, color):
 
     return possibleMoves
 
-# Raphael
 def checkCarre(pos, board, color):
+    x = pos[0]
+    y = pos[1]
     possibleMoves = []
+    if board[pos[0]][pos[1]] != "":
+
+        possibleMoves.extend(goLine(1, 0, 1, pos, board, color))    # Check the line incrementing y
+        possibleMoves.extend(goLine(-1, 0, 1, pos, board, color))          # Check the line decrementing y
+        possibleMoves.extend(goLine(0, 1, 1, pos, board, color))    # Check the line incrementing x
+        possibleMoves.extend(goLine(0, -1, 1, pos, board, color))         # Check the line decrementing x
+
+        possibleMoves.extend(goLine(-1, 1, 1, pos, board, color))       # Check the line incrementing x and y
+        possibleMoves.extend(goLine(1, -1, 1, pos, board, color))            # Check the line incrementing x and decrementing y
+        possibleMoves.extend(goLine(1, 1, 1, pos, board, color))         # Check the line incrementing y and decrementing x
+        possibleMoves.extend(goLine(-1, -1, 1, pos, board, color))             # Check the line decrementing x and y
+
     return possibleMoves
 
-# Caro
 def checkPawn(pos, board, color):
     x = pos[0]
     y = pos[1]
