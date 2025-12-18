@@ -1,3 +1,5 @@
+import random
+
 from .PwnStr import *
 
 #   Example function to be implemented for
@@ -12,19 +14,29 @@ from Bots.ChessBotList import register_chess_bot
 
 #  our bot
 def chess_bot(player_sequence, board, time_budget, **kwargs):
-
     color = player_sequence[1]
+
+    allPossibleMoves = []
+
     for x in range(board.shape[0]-1):
         for y in range(board.shape[1]):
             if board[x][y] != "":
                 if board[x][y][-1] != color:
                     continue
                 pos = (x, y)
-                print(board[x][y][0] + board[x][y][1], (x,y),checkMoves(pos, board, color))
-
+                piecePossibleMoves = checkMoves(pos, board, color)
+                print(board[x][y][0] + board[x][y][1], (x,y),piecePossibleMoves)
+                allPossibleMoves.extend(piecePossibleMoves)
         print("\n")
 
-    return (0,0), (0,0)
+    bestMove = ((0,0),(0,0),0)
+    for i in range(len(allPossibleMoves)):
+        if allPossibleMoves[i][2] > bestMove[2]:
+            bestMove = allPossibleMoves[i]
+    while bestMove == ((0,0),(0,0),0):
+        bestMove = allPossibleMoves[random.randint(0,len(allPossibleMoves)-1)]
+    #return (0,0), (0,0) #de base
+    return bestMove[0],bestMove[1]
 
 #   Example how to register the function
 register_chess_bot("PwnStr", chess_bot)
