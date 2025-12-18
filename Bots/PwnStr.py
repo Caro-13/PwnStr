@@ -22,7 +22,7 @@ def checkMoves(pos, board, color):
         # case "k":
         #     possibleMoves.extend(checkCarre(pos, board, color))
         case _:
-            return
+            return [((0,0),(0,0),0)]
     return possibleMoves
 
 
@@ -171,17 +171,43 @@ def checkPawn(pos, board, color):
     p = board[x][y][0]
     possibleMoves = []
 
+    #move in front
     nextX,nextY = x+1,y
-
     if isNextPosOnBoard(nextX, nextY):
         #empty case
         if board[nextX][nextY] == '':
             possibleMoves.append((pos, (nextX,nextY), 0))
-        #opponent piece
+        #oponnent piece
         elif board[nextX][nextY][-1] != color:
-            possibleMoves.append((pos, (nextX,nextY), checkValue(p[0])))
+            pass
         # my piece
         elif board[nextX][nextY][-1] == color:
+            pass
+
+    #eat right
+    rightX, rightY = x + 1, y-1
+    if isNextPosOnBoard(rightX, rightY):
+        # empty case
+        if board[rightX][rightY] == '':
+            pass
+        # oponnent piece
+        elif board[rightX][rightY][-1] != color:
+            possibleMoves.append((pos, (rightX, rightY), checkValue(p[0])))
+        # my piece
+        elif board[rightX][rightY][-1] == color:
+            pass
+
+    #eat left
+    leftX, leftY = x + 1, y + 1
+    if isNextPosOnBoard(leftX, leftY):
+        # empty case
+        if board[leftX][leftY] == '':
+            pass
+        # oponnent piece
+        elif board[leftX][leftY][-1] != color:
+            possibleMoves.append((pos, (leftX, leftY), checkValue(p[0])))
+        # my piece
+        elif board[leftX][leftY][-1] == color:
             pass
 
     return possibleMoves
