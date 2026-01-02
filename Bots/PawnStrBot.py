@@ -18,6 +18,8 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     start = time.perf_counter()
 
     color = player_sequence[1]
+    currentScore = checkMaterial(board)
+    printCurrentScore(currentScore)
 
     allPossibleMoves = []
 

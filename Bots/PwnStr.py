@@ -41,6 +41,22 @@ def checkValue(p):
         case _:
             return 0
 
+def checkMaterial(board):
+    # CurrentScore(0) = white score, currentScore(1) = black score
+    currentScore = [0, 0]
+    for x in range(board.shape[0]):
+        for y in range(board.shape[1]):
+            if board[x][y] != '':
+                p = checkValue(board[x][y][0])
+                if board[x][y][-1] == 'w':
+                    currentScore[0] += p
+                elif board[x][y][-1] == 'b':
+                    currentScore[1] += p
+
+    return currentScore
+
+def printCurrentScore(currentScore):
+    print(f"Current score: white: {currentScore[0]}  |  black: {currentScore[1]}")
 def printBoard(board):
     piece = ""
     print("\n")

@@ -13,11 +13,14 @@ from .PwnStr import *
 #   Be careful with modules to import from the root (don't forget the Bots.)
 from Bots.ChessBotList import register_chess_bot
 
-#  our bot
+#  our bot v_1
+
 def chess_bot(player_sequence, board, time_budget, **kwargs):
     start = time.perf_counter()
 
     color = player_sequence[1]
+    currentScore = checkMaterial(board)
+    printCurrentScore(currentScore)
 
     allPossibleMoves = []
 
