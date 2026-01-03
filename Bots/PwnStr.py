@@ -33,7 +33,7 @@ def checkMoves(pos, board, color):
 def checkAllMoves(board, color):
     allPossibleMoves = []
 
-    for x in range(len(board) - 1):
+    for x in range(len(board)):
         for y in range(len(board[1])):
             # for x in range(board.shape[0] - 1):
             #     for y in range(board.shape[1]):
@@ -64,23 +64,29 @@ def checkNextMoves(inputBoard, possibleMoves, color):
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove(possibleMoves)
-        # if findBestMove(checkAllMoves(board, toggleColor(color)))[2] > bestMove[2]:
-        #     bestMove = move
-        #     print(f"Next move: {bestMove}\n")
     return defaultMove(bestMove, possibleMoves)
+
+def checkNextMoves3(inputBoard, possibleMoves, color):
+    bestMove = defaultMove3(findBestMove(possibleMoves), possibleMoves)
+    print(f"Lvl 1 best move: {bestMove}")
+
+    def checkMoreMoves(inputBoard, possibleMoves):
+        for i, move in enumerate(possibleMoves):
+            board = newBoard(inputBoard, move)
+
+            allPossibleMoves = checkAllMoves(board, toggleColor(color))
+            if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+                possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+
+    checkMoreMoves(inputBoard, possibleMoves)
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
 
 
 def findBestMove(allPossibleMoves):
-    # bestMove = ((0, 0), (0, 0), 0)
-    #
-    # for i in range(len(allPossibleMoves)):
-    #     if allPossibleMoves[i][2] > bestMove[2]:
-    #         bestMove = allPossibleMoves[i]
-
-    bestMove = max(allPossibleMoves, key=lambda move: move[2], default=((0, 0), (0, 0), 0))
-
-    return bestMove
-
+    return max(allPossibleMoves, key=lambda move: move[2], default=((0, 0), (0, 0), 0))
 
 def defaultMove(bestMove, allPossibleMoves):
     if len(allPossibleMoves) > 0:
@@ -94,6 +100,13 @@ def defaultMove(bestMove, allPossibleMoves):
     else:
         bestMove = ((0, 0), (0, 0), 0)
     return bestMove
+
+def defaultMove3(bestMove, allPossibleMoves):
+    if not allPossibleMoves:
+        return ((0, 0), (0, 0), 0)
+    best_value = bestMove[2]
+    best_moves = [move for move in allPossibleMoves if move[2] == best_value]
+    return random.choice(best_moves)
 
 
 def newBoard(board, move):
@@ -193,7 +206,7 @@ def printBoard(board):
             # for x in range(board.shape[0]):
             #     for y in range(board.shape[1]):
             if board[x][y] == '':
-                piece += "' ' "
+                piece += " .  "
             else:
                 piece += f"{board[x][y]}  "
                 # piece += f"{board[x][y].string()}  "
@@ -241,20 +254,27 @@ def goLine(horiz, vert, max_steps, pos, board, color):
     x = pos[0]
     y = pos[1]
     possibleMoves = []
+    endX = len(board) - 1
+    endY = len(board[1]) - 1
 
-    for i in range(1, max_steps):
+    for i in range(1, max_steps + 1):
         nextPos = (x + i * vert, y + i * horiz)
-        # empty case
-        if board[nextPos[0]][nextPos[1]] == '':
-            possibleMoves.append((pos, nextPos, 0))
-        # opponent piece
-        elif board[nextPos[0]][nextPos[1]][-1] != color:
-            nextP = board[nextPos[0]][nextPos[1]][0]
-            possibleMoves.append((pos, nextPos, checkValue(nextP)))
-            break
-        # my piece
-        elif board[nextPos[0]][nextPos[1]][-1] == color:
-            break
+        if nextPos[0] < 0 or nextPos[1] < 0 or nextPos[0] > endX or nextPos[1] > endY:
+            continue
+        else:
+            # empty case
+            if board[nextPos[0]][nextPos[1]] == '':
+                possibleMoves.append((pos, nextPos, 0))
+            # opponent piece
+            elif board[nextPos[0]][nextPos[1]][-1] != color:
+                nextP = board[nextPos[0]][nextPos[1]][0]
+                possibleMoves.append((pos, nextPos, checkValue(nextP)))
+                break
+            # my piece
+            elif board[nextPos[0]][nextPos[1]][-1] == color:
+                break
+            else:
+                break
     return possibleMoves
 
 
@@ -262,10 +282,8 @@ def checkHorizVerti(pos, board, color):
     x = pos[0]
     y = pos[1]
     possibleMoves = []
-    endX = len(board)
-    endY = len(board[1])
-    # endX = board.shape[0]
-    # endY = board.shape[1]
+    endX = len(board) - 1
+    endY = len(board[1]) - 1
 
     possibleMoves.extend(goLine(1, 0, endY - y, pos, board, color))  # Check the line incrementing y
     possibleMoves.extend(goLine(-1, 0, y, pos, board, color))  # Check the line decrementing y
@@ -307,8 +325,6 @@ def checkL(pos, board, color):
 
 
 def checkCarre(pos, board, color):
-    x = pos[0]
-    y = pos[1]
     possibleMoves = []
     if board[pos[0]][pos[1]] != "":
         possibleMoves.extend(goLine(1, 0, 1, pos, board, color))  # Check the line incrementing y
@@ -320,7 +336,6 @@ def checkCarre(pos, board, color):
         possibleMoves.extend(goLine(1, -1, 1, pos, board, color))  # Check the line incrementing x and decrementing y
         possibleMoves.extend(goLine(1, 1, 1, pos, board, color))  # Check the line incrementing y and decrementing x
         possibleMoves.extend(goLine(-1, -1, 1, pos, board, color))  # Check the line decrementing x and y
-
     return possibleMoves
 
 

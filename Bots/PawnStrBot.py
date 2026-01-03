@@ -22,6 +22,8 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     # bestMove = findBestMove(allPossibleMoves)
     bestMove = checkNextMoves(board, allPossibleMoves, color)
     print()
+    printBoard(board)
+    print()
     print(f"Returned move: {pieceToString(board[bestMove[0][0]][bestMove[0][1]][0])} moves {bestMove}")
 
     # Compute and display execution time
