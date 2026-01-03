@@ -84,7 +84,7 @@ def findBestMove(allPossibleMoves):
 
 def defaultMove(bestMove, allPossibleMoves):
     if len(allPossibleMoves) > 0:
-        if bestMove == ((0, 0), (0, 0), 0):
+        if bestMove == ((0, 0), (0, 0), 0) or bestMove[2] == 0:
             bestMove = allPossibleMoves[random.randint(0, len(allPossibleMoves) - 1)]
             while bestMove[2] < 0:
                 bestMove = allPossibleMoves[random.randint(0, len(allPossibleMoves) - 1)]
