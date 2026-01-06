@@ -14,7 +14,7 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     printCurrentScore(currentScore)
 
     # Compute all possible moves
-    allPossibleMoves = checkAllMoves(board, color)
+    allPossibleMoves = checkAllMoves3(board, color)
     print(f"Possible moves: {len(allPossibleMoves)}")
     # displayMoves(board, allPossibleMoves)
 
