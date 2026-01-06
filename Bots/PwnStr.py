@@ -94,6 +94,7 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
         return evaluateBoard(board, color), None
 
     allMoves = checkAllMoves(board, color)
+    displayMoves(board, allMoves)
 
     # No moves available
     if not allMoves:
