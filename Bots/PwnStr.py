@@ -61,19 +61,20 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
 
     if maximizing_player:
         # MY turn - MAX score
-        maxScore = -float('inf')
+        maxScore = -float('inf') #on commence au pire des cas : -infinit de points que ce move raporte
         bestMove = None
         for move in allMoves:
             newBoardState = newBoard(board, move)
-            score, _ = minimax(newBoardState, depth - 1, False, toggleColor(color), False, alpha, beta)
+            #recursif pour tester le opponent pov --> il veux minimizer mes points --> maximizing false et ma couleur
+            score, _ = minimax(newBoardState, depth - 1, False, color, False, alpha, beta)
 
             totalScore = move[2] + score
 
-            if totalScore > maxScore:
+            if totalScore > maxScore: # Je veux mon meilleur coup
                 maxScore = totalScore
                 bestMove = move
 
-            alpha = max(alpha, totalScore)
+            alpha = max(alpha, totalScore) #maximise
             if beta <= alpha:
                 break
         return maxScore, bestMove
@@ -82,17 +83,20 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
         minScore = float('inf')
         bestMove = None
 
-        for move in allMoves:
+        opponentAllMoves = checkAllMoves(board, toggleColor(color))
+
+        for move in opponentAllMoves:
             newBoardState = newBoard(board, move)
-            score, _ = minimax(newBoardState, depth - 1, True, toggleColor(color), False, alpha, beta)
+            #adversaire va checker mon move, donc ma couleur et maximizing true
+            score, _ = minimax(newBoardState, depth - 1, True, color, False, alpha, beta)
 
             totalScore = move[2] + score
 
-            if totalScore < minScore:
+            if totalScore < minScore: #Opponent veux le pire score pour moi
                 minScore = totalScore
                 bestMove = move
 
-            beta = min(beta, totalScore)
+            beta = min(beta, totalScore) #donc minimize
             if beta <= alpha:
                 break
         return minScore, bestMove
