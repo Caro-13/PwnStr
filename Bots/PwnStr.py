@@ -49,6 +49,88 @@ def checkAllMoves(board, color):
     return allPossibleMoves
 
 
+def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-float('inf'), beta=float('inf')):
+    if depth == 0:
+        return evaluateBoard(board, color), None
+
+    allMoves = checkAllMoves(board, color)
+
+    # No moves available
+    if not allMoves:
+        return evaluateBoard(board, color)
+
+    if maximizing_player:
+        # MY turn - MAX score
+        maxScore = -float('inf')
+        bestMove = None
+        for move in allMoves:
+            newBoardState = newBoard(board, move)
+            score, _ = minimax(newBoardState, depth - 1, False, toggleColor(color), False, alpha, beta)
+
+            totalScore = move[2] + score
+
+            if totalScore > maxScore:
+                maxScore = totalScore
+                bestMove = move
+
+            alpha = max(alpha, totalScore)
+            if beta <= alpha:
+                break
+        return maxScore, bestMove
+    else:
+        # OPPONENT turn - MIN score
+        minScore = float('inf')
+        bestMove = None
+
+        for move in allMoves:
+            newBoardState = newBoard(board, move)
+            score, _ = minimax(newBoardState, depth - 1, True, toggleColor(color), False, alpha, beta)
+
+            totalScore = move[2] + score
+
+            if totalScore < minScore:
+                minScore = totalScore
+                bestMove = move
+
+            beta = min(beta, totalScore)
+            if beta <= alpha:
+                break
+        return minScore, bestMove
+
+
+def evaluateBoard(board, myColor):
+    # return positif if my color, negatif if opponent color
+    myScore = 0
+    opponentScore = 0
+    myKingExists = False
+    opponentKingExists = False
+
+    for x in range(len(board)):
+        for y in range(len(board[1])):
+            if board[x][y] == '':
+                continue
+
+            piece = board[x][y]
+            materialValue = checkValue(piece[0])
+            positionValue = evaluatePosition((x, y), piece, board)
+
+            if piece[-1] == myColor:
+                myScore += materialValue + positionValue
+                if piece[0] == 'k':
+                    myKingExists = True
+            else:
+                opponentScore += materialValue + positionValue
+                if piece[0] == 'k':
+                    opponentKingExists = True
+
+    # Check for game-ending conditions
+    if not opponentKingExists:
+        return 100000  # I win! Opponent's king is captured
+    if not myKingExists:
+        return -100000  # I lose! My king is captured
+
+    return myScore - opponentScore
+
 def checkNextMoves(inputBoard, possibleMoves, color):
     bestMove = defaultMove(findBestMove(possibleMoves), possibleMoves)
     print(f"Lvl 1 best move: {bestMove}")
@@ -142,6 +224,25 @@ def checkValue(p):
             return 0
 
 
+def evaluatePosition(pos, piece, board):
+    x, y = pos
+    p = piece[0]  # piece type
+    score = 0
+
+    # Center control bonus
+    center_distance = abs(x - endBoard/2) + abs(y - endBoard/2)
+    score += (endBoard - center_distance) * 0.1  # Small bonus for center control
+
+    # Pawn forward bonus --> closer to promot
+    if p == "p":
+        score += x * 0.2
+
+    # knight + bishops forward (better than pawn)
+    if p in ["n", "b"] and x > 0:
+        score += 0.3
+
+    return score
+
 def pieceToString(p):
     match p:
         case "p":
@@ -232,11 +333,13 @@ def checkDiagonal(pos, board, color):
             nextPos = (x + i * vert, y + i * horiz)
             # empty case
             if board[nextPos[0]][nextPos[1]] == '':
-                possibleMoves.append((pos, nextPos, 0))
+                forwardBonus = evaluatePosition(nextPos, board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, nextPos, 0 + forwardBonus))
             # opponent piece
             elif board[nextPos[0]][nextPos[1]][-1] != color:
-                # possibleMoves.append((pos, nextPos, checkValue(p[0])))
-                possibleMoves.append((pos, nextPos, checkValue(board[nextPos[0]][nextPos[1]][0])))
+                captureValue = checkValue(board[nextPos[0]][nextPos[1]][0])
+                forwardBonus = evaluatePosition(nextPos, board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, nextPos, captureValue + forwardBonus))
                 break
             # my piece
             elif board[nextPos[0]][nextPos[1]][-1] == color:
@@ -264,11 +367,13 @@ def goLine(horiz, vert, max_steps, pos, board, color):
         else:
             # empty case
             if board[nextPos[0]][nextPos[1]] == '':
-                possibleMoves.append((pos, nextPos, 0))
+                forwardBonus = evaluatePosition(nextPos, board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, nextPos, 0 + forwardBonus))
             # opponent piece
             elif board[nextPos[0]][nextPos[1]][-1] != color:
                 nextP = board[nextPos[0]][nextPos[1]][0]
-                possibleMoves.append((pos, nextPos, checkValue(nextP)))
+                forwardBonus = evaluatePosition(nextPos, board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, nextPos, checkValue(nextP)+forwardBonus))
                 break
             # my piece
             elif board[nextPos[0]][nextPos[1]][-1] == color:
@@ -303,10 +408,13 @@ def checkL(pos, board, color):
         if (isNextPosOnBoard(nextX, nextY)):
             # empty case
             if board[nextX][nextY] == '':
-                possibleMoves.append((pos, (nextX, nextY), 0))
+                forwardBonus = evaluatePosition((nextX, nextY), board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, (nextX, nextY), 0 + forwardBonus))
             # opponent piece
             elif board[nextX][nextY][-1] != color:
-                possibleMoves.append((pos, (nextX, nextY), checkValue(board[nextX][nextY][0])))
+                captureValue =checkValue(board[nextX][nextY][0])
+                forwardBonus = evaluatePosition((nextX, nextY), board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, (nextX, nextY), captureValue + forwardBonus))
 
             # my piece
             elif board[nextX][nextY][-1] == color:
@@ -344,13 +452,19 @@ def checkPawn(pos, board, color):
     y = pos[1]
     p = board[x][y][0]
     possibleMoves = []
+    promotionBonus = 8 # - pawn + qween (9-1)
 
     # move in front
     nextX, nextY = x + 1, y
     if isNextPosOnBoard(nextX, nextY):
         # empty case
         if board[nextX][nextY] == '':
-            possibleMoves.append((pos, (nextX, nextY), 0))
+            if nextX == endBoard :
+                forwardBonus = evaluatePosition((nextX, nextY), board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, (nextX, nextY), promotionBonus+forwardBonus))
+            else :
+                forwardBonus = evaluatePosition((nextX, nextY), board[pos[0]][pos[1]], board)
+                possibleMoves.append((pos, (nextX, nextY), 0 + forwardBonus))
         # oponnent piece
         elif board[nextX][nextY][-1] != color:
             pass
@@ -366,7 +480,10 @@ def checkPawn(pos, board, color):
             pass
         # oponnent piece
         elif board[rightX][rightY][-1] != color:
-            possibleMoves.append((pos, (rightX, rightY), checkValue(board[rightX][rightY][0])))
+            captureValue = checkValue(board[rightX][rightY][0])
+            promotionBonus = 8 if rightX == endBoard else 0  # Add promotion bonus if reaching end
+            forwardBonus = evaluatePosition((rightX,rightY),board[pos[0]][pos[1]], board)
+            possibleMoves.append((pos, (rightX, rightY), captureValue + promotionBonus+ forwardBonus))
         # my piece
         elif board[rightX][rightY][-1] == color:
             pass
@@ -379,7 +496,10 @@ def checkPawn(pos, board, color):
             pass
         # oponnent piece
         elif board[leftX][leftY][-1] != color:
-            possibleMoves.append((pos, (leftX, leftY), checkValue(board[leftX][leftY][0])))
+            captureValue = checkValue(board[leftX][leftY][0])
+            promotionBonus = 8 if leftX == endBoard else 0  # Add promotion bonus if reaching end
+            forwardBonus = evaluatePosition((leftX, leftY), board[pos[0]][pos[1]], board)
+            possibleMoves.append((pos, (leftX, leftY), captureValue + promotionBonus+forwardBonus))
         # my piece
         elif board[leftX][leftY][-1] == color:
             pass

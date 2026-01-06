@@ -6,6 +6,7 @@ from Bots.ChessBotList import register_chess_bot
 
 # Our bot
 def chess_bot(player_sequence, board, time_budget, **kwargs):
+    random.seed(time.time())
     start = time.perf_counter()
 
     color = player_sequence[1]
@@ -13,14 +14,24 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     currentScore = checkMaterial(board)
     printCurrentScore(currentScore)
 
-    # Compute all possible moves
     allPossibleMoves = checkAllMoves(board, color)
-    print(f"Possible moves: {len(allPossibleMoves)}")
-    # displayMoves(board, allPossibleMoves)
+    #check if can take opponent king in one move
+    for move in allPossibleMoves:
+        targetPos = move[1]  # Where we're moving to
+        targetPiece = board[targetPos[0]][targetPos[1]]
+        # yes : do it now !!!!!
+        if targetPiece != '' and targetPiece[0] == 'k' and targetPiece[-1] != color:
+            print(f"Returned move: {pieceToString(board[move[0][0]][move[0][1]][0])} captures KING at {move}")
+            end = time.perf_counter()
+            execution_time = round(end - start, 5)
+            print(f"Execution time: {execution_time}s")
+            print("---------- vX ----------")
+            return move[0], move[1]
 
-    # Find the best move among all the possible moves:
-    # bestMove = findBestMove(allPossibleMoves)
-    bestMove = checkNextMoves(board, allPossibleMoves, color)
+    # No : do min-max
+    score, bestMove = minimax(board, depth=3, maximizing_player=True, color=color)
+
+
     print()
     printBoard(board)
     print()
