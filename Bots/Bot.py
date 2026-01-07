@@ -1,4 +1,48 @@
 import random
+import time
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from Bots.ChessBotList import register_chess_bot
+
+
+
+# Our bot
+def chess_bot(player_sequence, board, time_budget, **kwargs):
+    random.seed(time.time())
+    start = time.perf_counter()
+
+    color = player_sequence[1]
+    print(f"\n---------- vX Playing: {'white' if color == 'w' else 'black'} ----------")
+    currentScore = checkMaterial(board)
+    printCurrentScore(currentScore)
+
+    # No : do min-max
+    score, bestMove = minimax(board, depth=3, maximizing_player=True, color=color)
+    print("MINIMAX RESULT:", score, bestMove)
+
+
+    print()
+    printBoard(board)
+    print()
+    print(f"Returned move: {pieceToString(board[bestMove[0][0]][bestMove[0][1]][0])} moves {bestMove}")
+
+    # Compute and display execution time
+    end = time.perf_counter()
+    execution_time = round(end - start, 5)
+    print(f"Execution time: {execution_time}s")
+    print("---------- vX ----------")
+
+    # return (0,0), (0,0) #de base
+    return bestMove[0], bestMove[1]
+
+
+#   Example how to register the function
+register_chess_bot("Bot", chess_bot)
+
+#--------------------------------------------------------------------------------------------------------------------------------------------
 
 # CONST
 boardLength = 8
@@ -56,9 +100,10 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
 
     allMoves = checkAllMoves(board, color)
 
+
     # No moves available
     if not allMoves:
-        return evaluateBoard(board, color)
+        return evaluateBoard(board, color), None
 
     if maximizing_player:
         # MY turn - MAX score
@@ -66,24 +111,28 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
         bestMove = None
 
         for move in allMoves:
+            from_pos, to_pos, move_value = move
+
+            # CHECK KING CAPTURE BEFORE MAKING THE MOVE
+            target_piece = board[to_pos[0]][to_pos[1]]
+            if target_piece != '' and target_piece[0] == 'k' and target_piece[-1] != color:
+                print(f"{depth} : KING CAPTURE AVAILABLE: {move}")
+                return 999999, move  # Return immediately!
+
             newBoardState = newBoard(board, move)
-            #recursif pour tester le opponent pov --> il veux minimizer mes points --> maximizing false et ma couleur
-            score, _ = minimax(newBoardState, depth - 1, False, color, False, alpha, beta)
+            score, child_move  = minimax(newBoardState, depth - 1, False, color, False, alpha, beta)
 
-            if depth == 3:  # Top level only
-                from_pos = move[0]
-                to_pos = move[1]
-                piece = board[from_pos[0]][from_pos[1]]
-                print(f"{piece} from {from_pos} to {to_pos} | immediate value: {move[2]} | minimax score: {score}")
+            if score >= 999999:
+                return score, child_move
 
-            if score > maxScore: # Je veux mon meilleur coup
+            if score > maxScore:
                 maxScore = score
                 bestMove = move
-            elif score == maxScore:
+            elif score == maxScore and score != 999999:
                 if random.random() > 0.5:
                     bestMove = move
 
-            alpha = max(alpha, score) #maximise
+            alpha = max(alpha, score)
             if beta <= alpha:
                 break
         return maxScore, bestMove
@@ -97,7 +146,10 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
         for move in opponentAllMoves:
             newBoardState = newBoard(board, move)
             #adversaire va checker mon move, donc ma couleur et maximizing true
-            score, _ = minimax(newBoardState, depth - 1, True, color, False, alpha, beta)
+            score, child_move  = minimax(newBoardState, depth - 1, True, color, False, alpha, beta)
+
+            if score <= -999999:
+                return score, child_move
 
             if score < minScore: #Opponent veux le pire score pour moi
                 minScore = score
