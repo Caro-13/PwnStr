@@ -9,7 +9,7 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     start = time.perf_counter()
 
     color = player_sequence[1]
-    print(f"\n---------- v3 Playing: {'white' if color == 'w' else 'black'} ----------")
+    print(f"\n---------- v35 Playing: {'white' if color == 'w' else 'black'} ----------")
     currentScore = checkMaterial(board)
     printCurrentScore(currentScore)
 
@@ -20,7 +20,7 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
 
     # Find the best move among all the possible moves:
     # bestMove = findBestMove(allPossibleMoves)
-    bestMove = checkNextMoves3(board, allPossibleMoves, color)
+    bestMove = checkNextMoves35(board, allPossibleMoves, color)
     print()
     printBoard(board)
     print()
@@ -30,11 +30,11 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     end = time.perf_counter()
     execution_time = round(end - start, 5)
     print(f"Execution time: {execution_time}s")
-    print("---------- v3 ----------")
+    print("---------- v35 ----------")
 
     # return (0,0), (0,0) #de base
     return bestMove[0], bestMove[1]
 
 
 #   Example how to register the function
-register_chess_bot("PwnStr_v3", chess_bot)
+register_chess_bot("PwnStr_v35", chess_bot)

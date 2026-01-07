@@ -29,6 +29,29 @@ def checkMoves(pos, board, color):
             return [((0, 0), (0, 0), 0)]
     return possibleMoves
 
+def checkMoves3(pos, board, color):
+    possibleMoves = []
+    p = board[pos[0]][pos[1]][0]
+    c = board[pos[0]][pos[1]][-1]
+    # p = board[pos[0], pos[1]][0]
+    # c = board[pos[0], pos[1]][-1]
+    match p:
+        case "p":
+            possibleMoves.extend(checkPawn3(pos, board, color))
+        case "n":
+            possibleMoves.extend(checkL3(pos, board, color))
+        case "b":
+            possibleMoves.extend(checkDiagonal3(pos, board, color))
+        case "r":
+            possibleMoves.extend(checkHorizVerti3(pos, board, color))
+        case "q":
+            possibleMoves.extend(checkHorizVerti3(pos, board, color))
+            possibleMoves.extend(checkDiagonal3(pos, board, color))
+        case "k":
+            possibleMoves.extend(checkCarre3(pos, board, color))
+        case _:
+            return [((0, 0), (0, 0), 0)]
+    return possibleMoves
 
 def checkAllMoves(board, color):
     allPossibleMoves = []
@@ -48,6 +71,23 @@ def checkAllMoves(board, color):
         # print("\n")
     return allPossibleMoves
 
+def checkAllMoves3(board, color):
+    allPossibleMoves = []
+
+    for x in range(len(board)):
+        for y in range(len(board[1])):
+            # for x in range(board.shape[0] - 1):
+            #     for y in range(board.shape[1]):
+            if board[x][y] != "":
+                if board[x][y][-1] != color:
+                    continue
+                else:
+                    pos = (x, y)
+                    piecePossibleMoves = checkMoves3(pos, board, color)
+                    # print(board[x][y][0] + board[x][y][1], (x, y), piecePossibleMoves)
+                    allPossibleMoves.extend(piecePossibleMoves)
+        # print("\n")
+    return allPossibleMoves
 
 def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-float('inf'), beta=float('inf')):
 
@@ -55,6 +95,7 @@ def minimax(board, depth, maximizing_player, color, return_move=False, alpha=-fl
         return evaluateBoard(board, color), None
 
     allMoves = checkAllMoves(board, color)
+    displayMoves(board, allMoves)
 
     # No moves available
     if not allMoves:
@@ -161,25 +202,115 @@ def checkNextMoves(inputBoard, possibleMoves, color):
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove(possibleMoves)
-    return defaultMove(bestMove, possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
 
 def checkNextMoves3(inputBoard, possibleMoves, color):
     bestMove = defaultMove3(findBestMove(possibleMoves), possibleMoves)
-    print(f"Lvl 1 best move: {bestMove}")
 
-    def checkMoreMoves(inputBoard, possibleMoves):
-        for i, move in enumerate(possibleMoves):
-            board = newBoard(inputBoard, move)
+    # for move in possibleMoves:
+    for i, move in enumerate(possibleMoves):
+        board = newBoard(inputBoard, move)
 
-            allPossibleMoves = checkAllMoves(board, toggleColor(color))
-            if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
-                possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
-
-    checkMoreMoves(inputBoard, possibleMoves)
+        allPossibleMoves = checkAllMoves3(board, toggleColor(color))
+        if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+            possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+        # else:
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove(possibleMoves)
     return defaultMove3(bestMove, possibleMoves)
+
+def checkNextMoves35(inputBoard, possibleMoves, color):
+    def checkMoreMoves(inputBoard, possibleMoves, color, depth=1):
+        if depth == 0:
+            return possibleMoves
+        else:
+            for i, move in enumerate(possibleMoves):
+                board = newBoard(inputBoard, move)
+
+                allPossibleMoves = checkAllMoves3(board, toggleColor(color))
+                allPossibleMoves = checkMoreMoves(board, allPossibleMoves, color, depth-1)
+
+                if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+                    possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+            return possibleMoves
+
+    checkMoreMoves(inputBoard, possibleMoves, color, 2)
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
+
+def checkNextMoves35b(inputBoard, possibleMoves, color):
+    def checkMoreMoves(inputBoard, possibleMoves, color, depth=1):
+        # Always work on a COPY to avoid recursive corruption
+        possibleMoves = possibleMoves.copy()
+
+        # Stop condition
+        if depth == 0:
+            return possibleMoves
+
+        for i, move in enumerate(possibleMoves):
+            board = newBoard(inputBoard, move)
+
+            # Generate opponent moves
+            opponentMoves = checkAllMoves3(board, toggleColor(color))
+
+            # Recursive evaluation
+            opponentMoves = checkMoreMoves(
+                board,
+                opponentMoves,
+                toggleColor(color),
+                depth - 1
+            )
+
+            # Safety: opponentMoves might be empty
+            opponentBest = findBestMove(opponentMoves)[2] if opponentMoves else 0
+
+            # Penalize move by opponent best reply
+            new_value = move[2] - opponentBest
+            possibleMoves[i] = (move[0], move[1], new_value)
+
+        # IMPORTANT: always return
+        return possibleMoves
+
+
+    possibleMoves = checkMoreMoves(inputBoard, possibleMoves, color, 2)
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
+
+def evaluateMove(board, move, color):
+    """
+    Returns the adjusted value of a move after opponent's best reply.
+    """
+    # Play our move
+    next_board = newBoard(board, move)
+
+    # Generate opponent moves
+    opponentMoves = checkAllMoves3(next_board, toggleColor(color))
+
+    if not opponentMoves:
+        return move[2]   # opponent has no reply
+
+    # Find opponent best move
+    opponentBestValue = findBestMove(opponentMoves)[2]
+
+    # Penalize our move
+    return move[2] - opponentBestValue
+
+def checkNextMoves35c(inputBoard, possibleMoves, color):
+    evaluatedMoves = []
+
+    for move in possibleMoves:
+        new_value = evaluateMove(inputBoard, move, color)
+        evaluatedMoves.append((move[0], move[1], new_value))
+
+    displayMoves(inputBoard, evaluatedMoves)
+
+    bestMove = findBestMove(evaluatedMoves)
+    return defaultMove3(bestMove, evaluatedMoves)
 
 
 def findBestMove(allPossibleMoves):
@@ -201,10 +332,10 @@ def defaultMove(bestMove, allPossibleMoves):
 def defaultMove3(bestMove, allPossibleMoves):
     if not allPossibleMoves:
         return ((0, 0), (0, 0), 0)
-    best_value = bestMove[2]
-    best_moves = [move for move in allPossibleMoves if move[2] == best_value]
-    return random.choice(best_moves)
-
+    bestValue = bestMove[2]
+    bestMoves = [move for move in allPossibleMoves if move[2] == bestValue]
+    randIndex = random.randint(0, len(bestMoves) - 1)
+    return bestMoves[randIndex]
 
 def newBoard(board, move):
     # move = [(1, 2), (2, 2)] = [(from), (to)]
@@ -360,6 +491,39 @@ def checkDiagonal(pos, board, color):
 
     return possibleMoves
 
+def checkDiagonal3(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    p = board[x][y][0]
+    possibleMoves = []
+
+    rightBottom = min(x, y)
+    rightUp = min(endBoard - x, y)
+
+    leftBottom = min(x, endBoard - y)
+    leftUp = min(endBoard - x, endBoard - y)
+
+    def goDiagonal(horiz, vert, max_steps):
+        for i in range(1, max_steps + 1):
+            nextPos = (x + i * vert, y + i * horiz)
+            # empty case
+            if board[nextPos[0]][nextPos[1]] == '':
+                possibleMoves.append((pos, nextPos, 0))
+            # opponent piece
+            elif board[nextPos[0]][nextPos[1]][-1] != color:
+                captureValue = checkValue(board[nextPos[0]][nextPos[1]][0])
+                possibleMoves.append((pos, nextPos, captureValue))
+                break
+            # my piece
+            elif board[nextPos[0]][nextPos[1]][-1] == color:
+                break
+
+    goDiagonal(-1, 1, rightUp)
+    goDiagonal(-1, -1, rightBottom)
+    goDiagonal(1, 1, leftUp)
+    goDiagonal(1, -1, leftBottom)
+
+    return possibleMoves
 
 def goLine(horiz, vert, max_steps, pos, board, color):
     x = pos[0]
@@ -388,6 +552,32 @@ def goLine(horiz, vert, max_steps, pos, board, color):
                 break
     return possibleMoves
 
+def goLine3(horiz, vert, max_steps, pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    possibleMoves = []
+    endX = len(board) - 1
+    endY = len(board[1]) - 1
+
+    for i in range(1, max_steps + 1):
+        nextPos = (x + i * vert, y + i * horiz)
+        if nextPos[0] < 0 or nextPos[1] < 0 or nextPos[0] > endX or nextPos[1] > endY:
+            continue
+        else:
+            # empty case
+            if board[nextPos[0]][nextPos[1]] == '':
+                possibleMoves.append((pos, nextPos, 0))
+            # opponent piece
+            elif board[nextPos[0]][nextPos[1]][-1] != color:
+                nextP = board[nextPos[0]][nextPos[1]][0]
+                possibleMoves.append((pos, nextPos, checkValue(nextP)))
+                break
+            # my piece
+            elif board[nextPos[0]][nextPos[1]][-1] == color:
+                break
+            else:
+                break
+    return possibleMoves
 
 def checkHorizVerti(pos, board, color):
     x = pos[0]
@@ -403,6 +593,19 @@ def checkHorizVerti(pos, board, color):
 
     return possibleMoves
 
+def checkHorizVerti3(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    possibleMoves = []
+    endX = len(board) - 1
+    endY = len(board[1]) - 1
+
+    possibleMoves.extend(goLine3(1, 0, endY - y, pos, board, color))  # Check the line incrementing y
+    possibleMoves.extend(goLine3(-1, 0, y, pos, board, color))  # Check the line decrementing y
+    possibleMoves.extend(goLine3(0, 1, endX - x, pos, board, color))  # Check the line incrementing x
+    possibleMoves.extend(goLine3(0, -1, x, pos, board, color))  # Check the line decrementing x
+
+    return possibleMoves
 
 def checkL(pos, board, color):
     x = pos[0]
@@ -435,6 +638,36 @@ def checkL(pos, board, color):
 
     return possibleMoves
 
+def checkL3(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    p = board[x][y][0]
+    possibleMoves = []
+
+    def goL(nextX, nextY):
+        if (isNextPosOnBoard(nextX, nextY)):
+            # empty case
+            if board[nextX][nextY] == '':
+                possibleMoves.append((pos, (nextX, nextY), 0))
+            # opponent piece
+            elif board[nextX][nextY][-1] != color:
+                captureValue =checkValue(board[nextX][nextY][0])
+                possibleMoves.append((pos, (nextX, nextY), captureValue))
+
+            # my piece
+            elif board[nextX][nextY][-1] == color:
+                pass
+
+    goL(x + 2, y + 1)
+    goL(x + 2, y - 1)
+    goL(x - 2, y + 1)
+    goL(x - 2, y - 1)
+    goL(x + 1, y + 2)
+    goL(x - 1, y + 2)
+    goL(x + 1, y - 2)
+    goL(x - 1, y - 2)
+
+    return possibleMoves
 
 def checkCarre(pos, board, color):
     possibleMoves = []
@@ -450,6 +683,19 @@ def checkCarre(pos, board, color):
         possibleMoves.extend(goLine(-1, -1, 1, pos, board, color))  # Check the line decrementing x and y
     return possibleMoves
 
+def checkCarre3(pos, board, color):
+    possibleMoves = []
+    if board[pos[0]][pos[1]] != "":
+        possibleMoves.extend(goLine3(1, 0, 1, pos, board, color))  # Check the line incrementing y
+        possibleMoves.extend(goLine3(-1, 0, 1, pos, board, color))  # Check the line decrementing y
+        possibleMoves.extend(goLine3(0, 1, 1, pos, board, color))  # Check the line incrementing x
+        possibleMoves.extend(goLine3(0, -1, 1, pos, board, color))  # Check the line decrementing x
+
+        possibleMoves.extend(goLine3(-1, 1, 1, pos, board, color))  # Check the line incrementing x and y
+        possibleMoves.extend(goLine3(1, -1, 1, pos, board, color))  # Check the line incrementing x and decrementing y
+        possibleMoves.extend(goLine3(1, 1, 1, pos, board, color))  # Check the line incrementing y and decrementing x
+        possibleMoves.extend(goLine3(-1, -1, 1, pos, board, color))  # Check the line decrementing x and y
+    return possibleMoves
 
 def checkPawn(pos, board, color):
     x = pos[0]
@@ -506,6 +752,57 @@ def checkPawn(pos, board, color):
 
     return possibleMoves
 
+def checkPawn3(pos, board, color):
+    x = pos[0]
+    y = pos[1]
+    p = board[x][y][0]
+    possibleMoves = []
+
+    # move in front
+    nextX, nextY = x + 1, y
+    if isNextPosOnBoard(nextX, nextY):
+        # empty case
+        if board[nextX][nextY] == '':
+            if nextX == endBoard :
+                possibleMoves.append((pos, (nextX, nextY), 0))
+            else :
+                possibleMoves.append((pos, (nextX, nextY), 0))
+        # oponnent piece
+        elif board[nextX][nextY][-1] != color:
+            pass
+        # my piece
+        elif board[nextX][nextY][-1] == color:
+            pass
+
+    # eat right
+    rightX, rightY = x + 1, y - 1
+    if isNextPosOnBoard(rightX, rightY):
+        # empty case
+        if board[rightX][rightY] == '':
+            pass
+        # oponnent piece
+        elif board[rightX][rightY][-1] != color:
+            captureValue = checkValue(board[rightX][rightY][0])
+            possibleMoves.append((pos, (rightX, rightY), captureValue))
+        # my piece
+        elif board[rightX][rightY][-1] == color:
+            pass
+
+    # eat left
+    leftX, leftY = x + 1, y + 1
+    if isNextPosOnBoard(leftX, leftY):
+        # empty case
+        if board[leftX][leftY] == '':
+            pass
+        # oponnent piece
+        elif board[leftX][leftY][-1] != color:
+            captureValue = checkValue(board[leftX][leftY][0])
+            possibleMoves.append((pos, (leftX, leftY), captureValue))
+        # my piece
+        elif board[leftX][leftY][-1] == color:
+            pass
+
+    return possibleMoves
 
 def isNextPosOnBoard(nextX, nextY):
     if nextX < 0 or nextY < 0 or nextX > endBoard or nextY > endBoard:
