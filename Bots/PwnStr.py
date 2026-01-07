@@ -191,25 +191,115 @@ def checkNextMoves(inputBoard, possibleMoves, color):
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove(possibleMoves)
-    return defaultMove(bestMove, possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
 
 def checkNextMoves3(inputBoard, possibleMoves, color):
     bestMove = defaultMove3(findBestMove(possibleMoves), possibleMoves)
-    print(f"Lvl 1 best move: {bestMove}")
 
-    def checkMoreMoves(inputBoard, possibleMoves):
-        for i, move in enumerate(possibleMoves):
-            board = newBoard(inputBoard, move)
+    # for move in possibleMoves:
+    for i, move in enumerate(possibleMoves):
+        board = newBoard(inputBoard, move)
 
-            allPossibleMoves = checkAllMoves3(board, toggleColor(color))
-            if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
-                possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
-
-    checkMoreMoves(inputBoard, possibleMoves)
+        allPossibleMoves = checkAllMoves3(board, toggleColor(color))
+        if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+            possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+        # else:
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove(possibleMoves)
     return defaultMove3(bestMove, possibleMoves)
+
+def checkNextMoves35(inputBoard, possibleMoves, color):
+    def checkMoreMoves(inputBoard, possibleMoves, color, depth=1):
+        if depth == 0:
+            return possibleMoves
+        else:
+            for i, move in enumerate(possibleMoves):
+                board = newBoard(inputBoard, move)
+
+                allPossibleMoves = checkAllMoves3(board, toggleColor(color))
+                allPossibleMoves = checkMoreMoves(board, allPossibleMoves, color, depth-1)
+
+                if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+                    possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+            return possibleMoves
+
+    checkMoreMoves(inputBoard, possibleMoves, color, 2)
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
+
+def checkNextMoves35b(inputBoard, possibleMoves, color):
+    def checkMoreMoves(inputBoard, possibleMoves, color, depth=1):
+        # Always work on a COPY to avoid recursive corruption
+        possibleMoves = possibleMoves.copy()
+
+        # Stop condition
+        if depth == 0:
+            return possibleMoves
+
+        for i, move in enumerate(possibleMoves):
+            board = newBoard(inputBoard, move)
+
+            # Generate opponent moves
+            opponentMoves = checkAllMoves3(board, toggleColor(color))
+
+            # Recursive evaluation
+            opponentMoves = checkMoreMoves(
+                board,
+                opponentMoves,
+                toggleColor(color),
+                depth - 1
+            )
+
+            # Safety: opponentMoves might be empty
+            opponentBest = findBestMove(opponentMoves)[2] if opponentMoves else 0
+
+            # Penalize move by opponent best reply
+            new_value = move[2] - opponentBest
+            possibleMoves[i] = (move[0], move[1], new_value)
+
+        # IMPORTANT: always return
+        return possibleMoves
+
+
+    possibleMoves = checkMoreMoves(inputBoard, possibleMoves, color, 2)
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
+
+def evaluateMove(board, move, color):
+    """
+    Returns the adjusted value of a move after opponent's best reply.
+    """
+    # Play our move
+    next_board = newBoard(board, move)
+
+    # Generate opponent moves
+    opponentMoves = checkAllMoves3(next_board, toggleColor(color))
+
+    if not opponentMoves:
+        return move[2]   # opponent has no reply
+
+    # Find opponent best move
+    opponentBestValue = findBestMove(opponentMoves)[2]
+
+    # Penalize our move
+    return move[2] - opponentBestValue
+
+def checkNextMoves35c(inputBoard, possibleMoves, color):
+    evaluatedMoves = []
+
+    for move in possibleMoves:
+        new_value = evaluateMove(inputBoard, move, color)
+        evaluatedMoves.append((move[0], move[1], new_value))
+
+    displayMoves(inputBoard, evaluatedMoves)
+
+    bestMove = findBestMove(evaluatedMoves)
+    return defaultMove3(bestMove, evaluatedMoves)
 
 
 def findBestMove(allPossibleMoves):
@@ -231,10 +321,10 @@ def defaultMove(bestMove, allPossibleMoves):
 def defaultMove3(bestMove, allPossibleMoves):
     if not allPossibleMoves:
         return ((0, 0), (0, 0), 0)
-    best_value = bestMove[2]
-    best_moves = [move for move in allPossibleMoves if move[2] == best_value]
-    return random.choice(best_moves)
-
+    bestValue = bestMove[2]
+    bestMoves = [move for move in allPossibleMoves if move[2] == bestValue]
+    randIndex = random.randint(0, len(bestMoves) - 1)
+    return bestMoves[randIndex]
 
 def newBoard(board, move):
     # move = [(1, 2), (2, 2)] = [(from), (to)]
