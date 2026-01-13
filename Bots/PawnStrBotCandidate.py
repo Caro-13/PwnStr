@@ -89,8 +89,9 @@ def checkNextMoves38(inputBoard, possibleMoves, color):
             board = newBoard(inputBoard, move)
 
             allPossibleMoves = checkAllMoves3(board, toggleColor(color))
-            if move[2] - findBestMove38(allPossibleMoves)[2] < move[2]:
-                possibleMoves[i] = (move[0], move[1], move[2] - findBestMove38(allPossibleMoves)[2])
+            bestMoveVal = findBestMove38(allPossibleMoves)[2]
+            # if move[2] - bestMoveVal < move[2]:
+            possibleMoves[i] = (move[0], move[1], move[2] - bestMoveVal)
 
     displayMoves(inputBoard, possibleMoves)
     bestMove = findBestMove38(possibleMoves)
