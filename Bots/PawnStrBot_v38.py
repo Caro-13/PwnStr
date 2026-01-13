@@ -6,18 +6,18 @@ from Bots.ChessBotList import register_chess_bot
 
 # Our bot
 def chess_bot(player_sequence, board, time_budget, **kwargs):
-    random.seed(time.time())
     start = time.perf_counter()
 
     color = player_sequence[1]
-    print(f"\n---------- vX Playing: {'white' if color == 'w' else 'black'} ----------")
+    print(f"\n---------- v3.8 Playing: {'white' if color == 'w' else 'black'} ----------")
     currentScore = checkMaterial(board)
     printCurrentScore(currentScore)
 
-    # No : do min-max
-    score, bestMove = minimax(board, depth=3, maximizing_player=True, color=color)
+    # Compute all possible moves
+    allPossibleMoves = checkAllMoves3(board, color)
+    print(f"Possible moves: {len(allPossibleMoves)}")
 
-
+    bestMove = checkNextMoves38(board, allPossibleMoves, color)
     print()
     printBoard(board)
     print()
@@ -27,11 +27,11 @@ def chess_bot(player_sequence, board, time_budget, **kwargs):
     end = time.perf_counter()
     execution_time = round(end - start, 5)
     print(f"Execution time: {execution_time}s")
-    print("---------- vX ----------")
+    print("---------- v3.8 ----------")
 
     # return (0,0), (0,0) #de base
     return bestMove[0], bestMove[1]
 
 
 #   Example how to register the function
-register_chess_bot("PwnStrBase", chess_bot)
+register_chess_bot("PwnStr_v38", chess_bot)

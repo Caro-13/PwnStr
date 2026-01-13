@@ -9,8 +9,6 @@ def checkMoves(pos, board, color):
     possibleMoves = []
     p = board[pos[0]][pos[1]][0]
     c = board[pos[0]][pos[1]][-1]
-    # p = board[pos[0], pos[1]][0]
-    # c = board[pos[0], pos[1]][-1]
     match p:
         case "p":
             possibleMoves.extend(checkPawn(pos, board, color))
@@ -312,6 +310,43 @@ def checkNextMoves35c(inputBoard, possibleMoves, color):
     bestMove = findBestMove(evaluatedMoves)
     return defaultMove3(bestMove, evaluatedMoves)
 
+def checkNextMoves38(inputBoard, possibleMoves, color):
+    # for move in possibleMoves:
+    for i, move in enumerate(possibleMoves):
+        if move[2] > 10:
+            displayMoves(inputBoard, possibleMoves)
+            print("Take the King!!")
+            return move
+        else:
+            board = newBoard(inputBoard, move)
+
+            allPossibleMoves = checkAllMoves3(board, toggleColor(color))
+            if move[2] - findBestMove(allPossibleMoves)[2] < move[2]:
+                possibleMoves[i] = (move[0], move[1], move[2] - findBestMove(allPossibleMoves)[2])
+
+    displayMoves(inputBoard, possibleMoves)
+    bestMove = findBestMove(possibleMoves)
+    return defaultMove3(bestMove, possibleMoves)
+
+def findBestMove38(allPossibleMoves):
+    for move in allPossibleMoves:
+        if move[2] > 10:
+            return move
+    else:
+        return max(allPossibleMoves, key=lambda move: move[2], default=((0, 0), (0, 0), 0))
+
+def defaultMove38(bestMove, allPossibleMoves):
+    if bestMove[2] > 10:
+        return bestMove
+    else:
+
+
+        if not allPossibleMoves:
+            return ((0, 0), (0, 0), 0)
+        bestValue = bestMove[2]
+        bestMoves = [move for move in allPossibleMoves if move[2] == bestValue]
+        randIndex = random.randint(0, len(bestMoves) - 1)
+        return bestMoves[randIndex]
 
 def findBestMove(allPossibleMoves):
     return max(allPossibleMoves, key=lambda move: move[2], default=((0, 0), (0, 0), 0))
@@ -344,13 +379,11 @@ def newBoard(board, move):
     outBoard[move[0][0]][move[0][1]] = ""
     return outBoard
 
-
 def toggleColor(color):
     if color == "w":
         return "b"
     elif color == "b":
         return "w"
-
 
 def checkValue(p):
     match p:
@@ -368,7 +401,6 @@ def checkValue(p):
             return 90
         case _:
             return 0
-
 
 def evaluatePosition(pos, piece):
     x, y = pos
@@ -401,7 +433,6 @@ def pieceToString(p):
         case _:
             return "No name"
 
-
 def colorToString(c):
     match c:
         case "w":
@@ -417,7 +448,6 @@ def displayMoves(board, moves):
         p = board[move[0][0]][move[0][1]]
         print(f"{colorToString(p[1])} {pieceToString(p[0])} moves from ({move[0][0]}, {move[0][1]}) to ({move[1][0]}, {move[1][1]}) | value = {move[2]}")
     print()
-
 
 def checkMaterial(board):
     # CurrentScore(0) = white score, currentScore(1) = black score
@@ -435,10 +465,8 @@ def checkMaterial(board):
 
     return currentScore
 
-
 def printCurrentScore(currentScore):
     print(f"Current score: white: {currentScore[0]}  |  black: {currentScore[1]}")
-
 
 def printBoard(board):
     piece = ""
@@ -455,7 +483,6 @@ def printBoard(board):
         print(f"{piece}\n")
         piece = ""
     print("\n")
-
 
 def checkDiagonal(pos, board, color):
     x = pos[0]
